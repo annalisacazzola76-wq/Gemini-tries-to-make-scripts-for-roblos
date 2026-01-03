@@ -1,58 +1,69 @@
--- Services
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
-
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
--- Cleanup
-if CoreGui:FindFirstChild("FlingGUI") then CoreGui.FlingGUI:Destroy() end
+if CoreGui:FindFirstChild("FlyGUI") then CoreGui.FlyGUI:Destroy() end
 
 local ScreenGui = Instance.new("ScreenGui", CoreGui)
-ScreenGui.Name = "FlingGUI"
+ScreenGui.Name = "FlyGUI"
 
 local Main = Instance.new("Frame", ScreenGui)
 Main.Size = UDim2.new(0, 150, 0, 80)
-Main.Position = UDim2.new(0.1, 0, 0.65, 0)
-Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Main.Position = UDim2.new(0.05, 0, 0.4, 0)
+Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Instance.new("UICorner", Main)
-local Stroke = Instance.new("UIStroke", Main)
-Stroke.Color = Color3.fromRGB(255, 0, 0)
-
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "FE FLING"
-Title.TextColor3 = Color3.new(1,1,1)
-Title.BackgroundTransparency = 1
-Title.Font = Enum.Font.GothamBold
+Instance.new("UIStroke", Main).Color = Color3.fromRGB(0, 255, 150)
 
 local Toggle = Instance.new("TextButton", Main)
-Toggle.Size = UDim2.new(0.8, 0, 0, 30)
-Toggle.Position = UDim2.new(0.1, 0, 0.5, 0)
-Toggle.Text = "Fling: OFF"
-Toggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Toggle.Size = UDim2.new(0.9, 0, 0, 40)
+Toggle.Position = UDim2.new(0.05, 0, 0.25, 0)
+Toggle.Text = "FLY: OFF"
+Toggle.Font = Enum.Font.GothamBold
 Toggle.TextColor3 = Color3.new(1,1,1)
+Toggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Instance.new("UICorner", Toggle)
 
-local flinging = false
+local flying = false
+local speed = 50
 
 Toggle.MouseButton1Click:Connect(function()
-    flinging = not flinging
-    Toggle.Text = flinging and "Fling: ON" or "Fling: OFF"
-    Toggle.BackgroundColor3 = flinging and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(50, 50, 50)
+    flying = not flying
+    Toggle.Text = flying and "FLY: ON" or "FLY: OFF"
+    Toggle.BackgroundColor3 = flying and Color3.fromRGB(0, 180, 100) or Color3.fromRGB(50, 50, 50)
     
-    if flinging then
-        spawn(function()
-            while flinging do
-                RunService.Heartbeat:Wait()
-                local char = LocalPlayer.Character
-                local hrp = char and char:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    -- Forza la velocità angolare al massimo per l'effetto fling
-                    hrp.Velocity = Vector3.new(500, 500, 500) 
-                    hrp.RotVelocity = Vector3.new(5000, 5000, 5000)
-                end
+    local char = LocalPlayer.Character
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    
+    if flying then
+        local bv = Instance.new("BodyVelocity", hrp)
+        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Velocity = Vector3.new(0,0,0)
+        bv.Name = "FlyVelocity"
+        
+        local bg = Instance.new("BodyGyro", hrp)
+        bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        bg.P = 10000
+        bg.Name = "FlyGyro"
+        
+        char.Humanoid.PlatformStand = true
+        
+        task.spawn(function()
+            while flying do
+                local cam = workspace.CurrentCamera.CFrame
+                local dir = Vector3.new(0,0,0)
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + cam.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - cam.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - cam.RightVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + cam.RightVector end
+                bv.Velocity = dir * speed
+                bg.CFrame = cam
+                RunService.RenderStepped:Wait()
             end
+            if bv then bv:Destroy() end
+            if bg then bg:Destroy() end
+            char.Humanoid.PlatformStand = false
         end)
     end
 end)

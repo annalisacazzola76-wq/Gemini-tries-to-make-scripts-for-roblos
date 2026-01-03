@@ -1,0 +1,167 @@
+-- Services
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Cleanup
+if CoreGui:FindFirstChild("ChaosHub") then CoreGui.ChaosHub:Destroy() end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ChaosHub"
+pcall(function() ScreenGui.Parent = CoreGui end)
+if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+-- Main Frame
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 320, 0, 500)
+MainFrame.Position = UDim2.new(0.5, -160, 0.4, -250)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 0, 0) -- Dark Red/Black
+MainFrame.Active = true
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+local Stroke = Instance.new("UIStroke", MainFrame)
+Stroke.Color = Color3.fromRGB(255, 0, 0)
+Stroke.Thickness = 3
+
+-- Title
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "★ 666 CHAOS HUB ★"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.GothamBlack
+Title.BackgroundTransparency = 1
+Title.TextSize = 20
+
+-- Scroll
+local Scroll = Instance.new("ScrollingFrame", MainFrame)
+Scroll.Size = UDim2.new(1, -20, 1, -70)
+Scroll.Position = UDim2.new(0, 10, 0, 60)
+Scroll.BackgroundTransparency = 1
+Scroll.CanvasSize = UDim2.new(0, 0, 3, 0)
+Scroll.ScrollBarThickness = 2
+
+local Layout = Instance.new("UIListLayout", Scroll)
+Layout.Padding = UDim.new(0, 10)
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- Helpers
+local function createInput(placeholder)
+    local i = Instance.new("TextBox", Scroll)
+    i.Size = UDim2.new(0.9, 0, 0, 35)
+    i.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    i.TextColor3 = Color3.fromRGB(255, 255, 255)
+    i.PlaceholderText = placeholder
+    i.Text = ""
+    Instance.new("UICorner", i)
+    return i
+end
+
+local function createBtn(text, color, func)
+    local b = Instance.new("TextButton", Scroll)
+    b.Size = UDim2.new(0.9, 0, 0, 35)
+    b.Text = text
+    b.BackgroundColor3 = color
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", b)
+    b.MouseButton1Click:Connect(func)
+    return b
+end
+
+--- FEATURES ---
+
+-- MUSIC SECTION
+local MusicID = createInput("Enter Music ID...")
+local currentSound = nil
+createBtn("PLAY MUSIC", Color3.fromRGB(150, 0, 0), function()
+    if currentSound then currentSound:Destroy() end
+    currentSound = Instance.new("Sound", workspace)
+    currentSound.Name = "ChaosMusic"
+    currentSound.SoundId = "rbxassetid://" .. MusicID.Text
+    currentSound.Volume = 2
+    currentSound.Looped = true
+    currentSound:Play()
+end)
+
+-- 666 MODE (Fire & Lasers)
+createBtn("ACTIVATE 666 MODE", Color3.fromRGB(255, 0, 0), function()
+    Lighting.Ambient = Color3.new(1, 0, 0)
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") and v.Transparency < 1 then
+            -- Add Fire
+            local f = Instance.new("Fire", v)
+            f.Name = "ChaosEffect"
+            f.Size = 10
+            -- Add Laser Edges (SelectionBox effect)
+            local s = Instance.new("SelectionBox", v)
+            s.Name = "ChaosEffect"
+            s.Adornee = v
+            s.Color3 = Color3.new(1, 0, 0)
+            s.LineThickness = 0.1
+        end
+    end
+end)
+
+-- RIG CHANGER (Fake Client-Side)
+createBtn("SWITCH RIG (R15 <-> R6)", Color3.fromRGB(100, 0, 0), function()
+    local char = LocalPlayer.Character
+    if char:FindFirstChild("UpperTorso") then
+        print("Switching to R6 style...")
+        -- In client-side we simulate R6 by hiding R15 parts
+        -- Note: A real rig switch requires server access, but we can visual-fake it
+        for _, part in pairs(char:GetChildren()) do
+            if part:IsA("BasePart") and (part.Name:find("Left") or part.Name:find("Right")) then
+                part.Transparency = 0.5 -- Visual indicator
+            end
+        end
+    end
+end)
+
+-- 2D IMAGE SPAM
+local ImageID = createInput("Decal/Image ID...")
+createBtn("SPAM SCREEN IMAGES", Color3.fromRGB(200, 0, 0), function()
+    spawn(function()
+        for i = 1, 50 do
+            local img = Instance.new("ImageLabel", ScreenGui)
+            img.Name = "ChaosEffect"
+            img.Size = UDim2.new(0, 150, 0, 150)
+            img.Position = UDim2.new(math.random(), -75, math.random(), -75)
+            img.Image = "rbxassetid://" .. ImageID.Text
+            img.BackgroundTransparency = 1
+            task.wait(0.05)
+        end
+    end)
+end)
+
+-- CLEANUP
+createBtn("CLEAN ALL CHAOS", Color3.fromRGB(50, 50, 50), function()
+    if currentSound then currentSound:Destroy() end
+    Lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v.Name == "ChaosEffect" or v.Name == "ChaosMusic" then
+            v:Destroy()
+        end
+    end
+    for _, v in pairs(ScreenGui:GetChildren()) do
+        if v.Name == "ChaosEffect" then v:Destroy() end
+    end
+end)
+
+--- Mobile Drag ---
+local dragging, dragStart, startPos
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true; dragStart = input.Position; startPos = MainFrame.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
+end)

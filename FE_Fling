@@ -1,0 +1,58 @@
+-- Services
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Cleanup
+if CoreGui:FindFirstChild("FlingGUI") then CoreGui.FlingGUI:Destroy() end
+
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "FlingGUI"
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 150, 0, 80)
+Main.Position = UDim2.new(0.1, 0, 0.65, 0)
+Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Instance.new("UICorner", Main)
+local Stroke = Instance.new("UIStroke", Main)
+Stroke.Color = Color3.fromRGB(255, 0, 0)
+
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "FE FLING"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+
+local Toggle = Instance.new("TextButton", Main)
+Toggle.Size = UDim2.new(0.8, 0, 0, 30)
+Toggle.Position = UDim2.new(0.1, 0, 0.5, 0)
+Toggle.Text = "Fling: OFF"
+Toggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Toggle.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", Toggle)
+
+local flinging = false
+
+Toggle.MouseButton1Click:Connect(function()
+    flinging = not flinging
+    Toggle.Text = flinging and "Fling: ON" or "Fling: OFF"
+    Toggle.BackgroundColor3 = flinging and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(50, 50, 50)
+    
+    if flinging then
+        spawn(function()
+            while flinging do
+                RunService.Heartbeat:Wait()
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    -- Forza la velocità angolare al massimo per l'effetto fling
+                    hrp.Velocity = Vector3.new(500, 500, 500) 
+                    hrp.RotVelocity = Vector3.new(5000, 5000, 5000)
+                end
+            end
+        end)
+    end
+end)

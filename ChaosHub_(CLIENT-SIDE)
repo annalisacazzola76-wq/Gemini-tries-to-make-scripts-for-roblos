@@ -7,30 +7,30 @@ local Lighting = game:GetService("Lighting")
 local LocalPlayer = Players.LocalPlayer
 
 -- Cleanup
-if CoreGui:FindFirstChild("ChaosHubV3") then CoreGui.ChaosHubV3:Destroy() end
+if CoreGui:FindFirstChild("ChaosHub_Final") then CoreGui.ChaosHub_Final:Destroy() end
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ChaosHubV3"
+ScreenGui.Name = "ChaosHub_Final"
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 -- Main Frame
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 320, 0, 480)
-MainFrame.Position = UDim2.new(0.5, -160, 0.4, -240)
+MainFrame.Size = UDim2.new(0, 320, 0, 520)
+MainFrame.Position = UDim2.new(0.5, -160, 0.4, -260)
 MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 MainFrame.Active = true
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", MainFrame).Color = Color3.fromRGB(255, 0, 0)
 
 -- Title
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 50)
-Title.Text = "ULTIMATE CHAOS HUB"
+Title.Text = "CHAOS HUB V5 (R6 UPD)"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.GothamBold
-Title.BackgroundTransparency = 1
 Title.TextSize = 18
+Title.BackgroundTransparency = 1
 
 -- Scroll
 local Scroll = Instance.new("ScrollingFrame", MainFrame)
@@ -47,7 +47,7 @@ Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 local function createInput(placeholder)
     local i = Instance.new("TextBox", Scroll)
     i.Size = UDim2.new(0.9, 0, 0, 35)
-    i.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    i.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     i.TextColor3 = Color3.fromRGB(255, 255, 255)
     i.PlaceholderText = placeholder
     i.Text = ""
@@ -67,12 +67,40 @@ local function createBtn(text, color, func)
     return b
 end
 
---- BUTTONS & INPUTS ---
+--- FEATURES ---
 
 local GlobalID = createInput("Asset ID (Music/Image/Particle)")
 
--- 1. Music Player
-createBtn("PLAY MUSIC ID", Color3.fromRGB(150, 0, 0), function()
+-- 1. REAL R6 RIG CHANGE (Respawn & Change)
+createBtn("RESPAWN AS R6", Color3.fromRGB(150, 0, 150), function()
+    -- Client-side simulation of R6 conversion through CharacterAppearance
+    local char = LocalPlayer.Character
+    if char then
+        local oldPos = char.PrimaryPart.CFrame
+        LocalPlayer.CharacterAppearanceId = 12102550 -- R6 default reference
+        char:BreakJoints() -- Force Respawn
+        
+        LocalPlayer.CharacterAdded:Connect(function(newChar)
+            task.wait(0.5)
+            newChar:SetPrimaryPartCFrame(oldPos)
+        end)
+    end
+end)
+
+-- 2. PARTICLES SPAM
+createBtn("SPAWN PARTICLES", Color3.fromRGB(200, 100, 0), function()
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        local p = Instance.new("ParticleEmitter", hrp)
+        p.Name = "ChaosVFX"
+        p.Texture = "rbxassetid://" .. (GlobalID.Text ~= "" and GlobalID.Text or "243053748")
+        p.Size = NumberSequence.new(5, 12)
+        p.Rate = 120
+    end
+end)
+
+-- 3. MUSIC PLAYER
+createBtn("PLAY MUSIC ID", Color3.fromRGB(0, 120, 0), function()
     local s = workspace:FindFirstChild("ChaosSound") or Instance.new("Sound", workspace)
     s.Name = "ChaosSound"
     s.SoundId = "rbxassetid://" .. GlobalID.Text
@@ -80,91 +108,48 @@ createBtn("PLAY MUSIC ID", Color3.fromRGB(150, 0, 0), function()
     s:Play()
 end)
 
--- 2. Particles Spam (Fixed)
-createBtn("SPAM PARTICLES", Color3.fromRGB(200, 100, 0), function()
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if hrp then
-        local p = Instance.new("ParticleEmitter", hrp)
-        p.Name = "ChaosEffect"
-        p.Texture = "rbxassetid://" .. (GlobalID.Text ~= "" and GlobalID.Text or "243053748")
-        p.Size = NumberSequence.new(5, 10)
-        p.Rate = 100
-        p.Lifetime = NumberRange.new(2, 5)
-    end
-end)
-
--- 3. Rig Change (R15 to R6 Visual Hack)
-createBtn("FORCE R6 VISUALS", Color3.fromRGB(100, 0, 150), function()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        for _, v in pairs(char:GetChildren()) do
-            if v:IsA("BasePart") and (v.Name:find("Left") or v.Name:find("Right") or v.Name:find("Upper") or v.Name:find("Lower")) then
-                if v.Name ~= "HumanoidRootPart" then v.Transparency = 1 end -- Hide R15 parts
-            end
-        end
-        -- Create fake R6 blocks
-        local torso = Instance.new("Part", char)
-        torso.Name = "ChaosEffect"
-        torso.Size = Vector3.new(2, 2, 1)
-        torso.Color = Color3.new(1, 1, 1)
-        local weld = Instance.new("Weld", torso)
-        weld.Part0 = char.HumanoidRootPart
-        weld.Part1 = torso
-    end
-end)
-
--- 4. 666 Mode (Fire & Lasers)
+-- 4. 666 MODE (Fire & Lasers)
 createBtn("ACTIVATE 666 MODE", Color3.fromRGB(255, 0, 0), function()
     Lighting.Ambient = Color3.new(1, 0, 0)
     for _, v in pairs(workspace:GetDescendants()) do
         if v:IsA("BasePart") and v.Transparency < 1 then
-            Instance.new("Fire", v).Name = "ChaosEffect"
+            Instance.new("Fire", v).Name = "ChaosVFX"
             local s = Instance.new("SelectionBox", v)
-            s.Name = "ChaosEffect"
+            s.Name = "ChaosVFX"
             s.Adornee = v
             s.Color3 = Color3.new(1, 0, 0)
         end
     end
 end)
 
--- 5. Unanchor All (Client)
-createBtn("UNANCHOR MAP", Color3.fromRGB(50, 50, 50), function()
+-- 5. UNANCHOR MAP
+createBtn("UNANCHOR ALL", Color3.fromRGB(60, 60, 60), function()
     for _, v in pairs(workspace:GetDescendants()) do
         if v:IsA("BasePart") then v.Anchored = false end
     end
 end)
 
--- 6. Kick All (Client Troll)
-createBtn("KICK ALL PLAYERS", Color3.fromRGB(200, 0, 0), function()
+-- 6. KICK ALL (Client-Side)
+createBtn("KICK ALL PLAYERS", Color3.fromRGB(180, 0, 0), function()
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            p.Character:Destroy() -- Removes them from your screen
-        end
+        if p ~= LocalPlayer then p:Destroy() end
     end
 end)
 
--- 7. Shutdown (Fake)
-createBtn("SERVER SHUTDOWN", Color3.fromRGB(0, 0, 0), function()
-    local g = Instance.new("ScreenGui", CoreGui)
-    local f = Instance.new("Frame", g)
-    f.Size = UDim2.new(1, 0, 1, 0)
-    f.BackgroundColor3 = Color3.new(0, 0, 0)
-    local t = Instance.new("TextLabel", f)
-    t.Size = UDim2.new(1, 0, 1, 0)
-    t.Text = "The server has experienced a critical error.\nDisconnected."
-    t.TextColor3 = Color3.new(1, 1, 1)
-    t.TextSize = 30
+-- 7. REAL SHUTDOWN (Disconnect)
+createBtn("SHUTDOWN GAME", Color3.fromRGB(0, 0, 0), function()
+    LocalPlayer:Kick("Critical Server Shutdown.")
 end)
 
--- 8. Cleanup
-createBtn("CLEAN ALL VFX", Color3.fromRGB(80, 80, 80), function()
+-- 8. CLEANUP
+createBtn("CLEAN EFFECTS", Color3.fromRGB(100, 100, 100), function()
     Lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
     for _, v in pairs(workspace:GetDescendants()) do
-        if v.Name == "ChaosEffect" or v.Name == "ChaosSound" then v:Destroy() end
+        if v.Name == "ChaosVFX" or v.Name == "ChaosSound" then v:Destroy() end
     end
 end)
 
---- Dragging Logic ---
+--- Mobile Dragging ---
 local dragging, dragStart, startPos
 MainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then

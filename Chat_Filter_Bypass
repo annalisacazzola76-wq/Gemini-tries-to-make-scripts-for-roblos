@@ -7,15 +7,15 @@ local TextChatService = game:GetService("TextChatService")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Cleanup previous GUI
-if CoreGui:FindFirstChild("StarBypass") then CoreGui.StarBypass:Destroy() end
+-- Cleanup
+if CoreGui:FindFirstChild("StarBypassV3") then CoreGui.StarBypassV3:Destroy() end
 
--- GUI Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "StarBypass"
+ScreenGui.Name = "StarBypassV3"
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
+-- Main Frame
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 280, 0, 180)
 MainFrame.Position = UDim2.new(0.5, -140, 0.4, -90)
@@ -24,12 +24,12 @@ MainFrame.Active = true
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
 local Stroke = Instance.new("UIStroke", MainFrame)
-Stroke.Color = Color3.fromRGB(0, 200, 255) -- Electric Blue
+Stroke.Color = Color3.fromRGB(255, 255, 255) -- White Border
 Stroke.Thickness = 2
 
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "CHAT BYPASS SYSTEM"
+Title.Text = "STAR BYPASS ★"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.BackgroundTransparency = 1
 Title.Font = Enum.Font.GothamBold
@@ -38,8 +38,8 @@ Title.TextSize = 16
 local ChatInput = Instance.new("TextBox", MainFrame)
 ChatInput.Size = UDim2.new(0.85, 0, 0, 45)
 ChatInput.Position = UDim2.new(0.075, 0, 0.3, 0)
-ChatInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-ChatInput.PlaceholderText = "Type message here..."
+ChatInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ChatInput.PlaceholderText = "Message to Bypass..."
 ChatInput.Text = ""
 ChatInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 ChatInput.Font = Enum.Font.Gotham
@@ -48,39 +48,25 @@ Instance.new("UICorner", ChatInput)
 local SendBtn = Instance.new("TextButton", MainFrame)
 SendBtn.Size = UDim2.new(0.85, 0, 0, 40)
 SendBtn.Position = UDim2.new(0.075, 0, 0.65, 0)
-SendBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+SendBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 SendBtn.Text = "SEND BYPASS"
 SendBtn.Font = Enum.Font.GothamBlack
-SendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SendBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 Instance.new("UICorner", SendBtn)
 
---- ADVANCED STAR BYPASS LOGIC ---
-local function advancedBypass(text)
-    -- Map for Mathematical Italic characters to confuse the AI filter
-    local italicMap = {
-        ["a"]="𝘢", ["b"]="𝘣", ["c"]="𝘤", ["d"]="𝘥", ["e"]="𝘦", ["f"]="𝘧", ["g"]="𝘨",
-        ["h"]="𝘩", ["i"]="𝘪", ["j"]="𝘫", ["k"]="𝘬", ["l"]="𝘭", ["m"]="𝘮", ["n"]="𝘯",
-        ["o"]="𝘰", ["p"]="𝘱", ["q"]="𝘲", ["r"]="𝘳", ["s"]="𝘴", ["t"]="𝘵", ["u"]="𝘶",
-        ["v"]="𝘷", ["w"]="𝘸", ["x"]="𝘹", ["y"]="𝘺", ["z"]="𝘻",
-        ["A"]="𝘈", ["B"]="𝘉", ["C"]="𝘊", ["D"]="𝘋", ["E"]="𝘌", ["F"]="𝘍", ["G"]="𝘎",
-        ["H"]="𝘏", ["I"]="𝘐", ["J"]="𝘑", ["K"]="𝘒", ["L"]="𝘓", ["M"]="𝘔", ["N"]="𝘕",
-        ["O"]="𝘖", ["P"]="𝘗", ["Q"]="𝘘", ["R"]="𝘙", ["S"]="𝘚", ["T"]="𝘛", ["U"]="𝘜",
-        ["V"]="𝘝", ["W"]="𝘞", ["X"]="𝘟", ["Y"]="𝘠", ["Z"]="𝘡"
-    }
-
-    local bypassed = " . " -- Prefix to confuse the start of the string
+--- STAR BYPASS LOGIC (★ Method) ---
+local function starBypass(text)
+    local result = "★"
     for i = 1, #text do
-        local char = text:sub(i,i)
-        local mappedChar = italicMap[char] or char
-        
-        if char ~= " " then
-            -- Adds a star and an invisible separator after each letter
-            bypassed = bypassed .. mappedChar .. " * "
+        local c = text:sub(i,i)
+        if c ~= " " then
+            -- Aggiunge la stella speciale dopo ogni carattere
+            result = result .. c .. "★"
         else
-            bypassed = bypassed .. "   " 
+            result = result .. "  "
         end
     end
-    return bypassed
+    return result
 end
 
 local function send(msg)
@@ -89,6 +75,7 @@ local function send(msg)
     if remote then
         remote:FireServer(msg, "All")
     else
+        -- Support for New TextChatService
         local channel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
         if channel then
             channel:SendAsync(msg)
@@ -98,7 +85,7 @@ end
 
 SendBtn.MouseButton1Click:Connect(function()
     if ChatInput.Text ~= "" then
-        send(advancedBypass(ChatInput.Text))
+        send(starBypass(ChatInput.Text))
         ChatInput.Text = ""
     end
 end)

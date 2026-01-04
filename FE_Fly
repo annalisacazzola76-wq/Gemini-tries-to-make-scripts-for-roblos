@@ -1,80 +1,110 @@
--- Services
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-
 local LocalPlayer = Players.LocalPlayer
 
--- Cleanup
-if CoreGui:FindFirstChild("FlyGUI") then CoreGui.FlyGUI:Destroy() end
+if CoreGui:FindFirstChild("AdvancedFlyGUI") then CoreGui.AdvancedFlyGUI:Destroy() end
 
 local ScreenGui = Instance.new("ScreenGui", CoreGui)
-ScreenGui.Name = "FlyGUI"
+ScreenGui.Name = "AdvancedFlyGUI"
 
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 150, 0, 80)
-Main.Position = UDim2.new(0.1, 0, 0.5, 0)
+Main.Size = UDim2.new(0, 180, 0, 150)
+Main.Position = UDim2.new(0.05, 0, 0.3, 0)
 Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Main.Active = true
+Main.Draggable = true -- Puoi spostarla col dito
 Instance.new("UICorner", Main)
-local Stroke = Instance.new("UIStroke", Main)
-Stroke.Color = Color3.fromRGB(0, 255, 100)
-
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "FE FLY"
-Title.TextColor3 = Color3.new(1,1,1)
-Title.BackgroundTransparency = 1
-Title.Font = Enum.Font.GothamBold
+Instance.new("UIStroke", Main).Color = Color3.fromRGB(0, 255, 255)
 
 local Toggle = Instance.new("TextButton", Main)
-Toggle.Size = UDim2.new(0.8, 0, 0, 30)
-Toggle.Position = UDim2.new(0.1, 0, 0.5, 0)
-Toggle.Text = "Fly: OFF"
-Toggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Toggle.Size = UDim2.new(0.9, 0, 0, 40)
+Toggle.Position = UDim2.new(0.05, 0, 0.1, 0)
+Toggle.Text = "FLY: OFF"
+Toggle.Font = Enum.Font.GothamBold
 Toggle.TextColor3 = Color3.new(1,1,1)
+Toggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Instance.new("UICorner", Toggle)
 
+local SpeedInput = Instance.new("TextBox", Main)
+SpeedInput.Size = UDim2.new(0.9, 0, 0, 30)
+SpeedInput.Position = UDim2.new(0.05, 0, 0.45, 0)
+SpeedInput.PlaceholderText = "Speed (Default 50)"
+SpeedInput.Text = "50"
+SpeedInput.Font = Enum.Font.Gotham
+SpeedInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SpeedInput.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", SpeedInput)
+
+local Info = Instance.new("TextLabel", Main)
+Info.Size = UDim2.new(1, 0, 0, 20)
+Info.Position = UDim2.new(0, 0, 0.75, 0)
+Info.Text = "Use W,A,S,D to Move"
+Info.TextColor3 = Color3.new(0.7, 0.7, 0.7)
+Info.BackgroundTransparency = 1
+Info.TextSize = 12
+
 local flying = false
-local speed = 50
-local bv, bg
+local flySpeed = 50
 
 Toggle.MouseButton1Click:Connect(function()
     flying = not flying
-    Toggle.Text = flying and "Fly: ON" or "Fly: OFF"
-    Toggle.BackgroundColor3 = flying and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(50, 50, 50)
+    Toggle.Text = flying and "FLY: ON" or "FLY: OFF"
+    Toggle.BackgroundColor3 = flying and Color3.fromRGB(0, 150, 200) or Color3.fromRGB(50, 50, 50)
     
     local char = LocalPlayer.Character
-    if flying and char and char:FindFirstChild("HumanoidRootPart") then
-        local hrp = char.HumanoidRootPart
-        bg = Instance.new("BodyGyro", hrp)
-        bg.P = 9e4
-        bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-        bg.cframe = hrp.CFrame
+    if not char then return end
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    
+    if flying then
+        flySpeed = tonumber(SpeedInput.Text) or 50
         
-        bv = Instance.new("BodyVelocity", hrp)
-        bv.velocity = Vector3.new(0, 0.1, 0)
-        bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+        local bv = Instance.new("BodyVelocity")
+        bv.Name = "FlyVelocity"
+        bv.Parent = hrp
+        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Velocity = Vector3.new(0, 0, 0)
+        
+        local bg = Instance.new("BodyGyro")
+        bg.Name = "FlyGyro"
+        bg.Parent = hrp
+        bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        bg.P = 15000
         
         char.Humanoid.PlatformStand = true
         
-        spawn(function()
+        task.spawn(function()
             while flying do
-                RunService.RenderStepped:Wait()
                 local cam = workspace.CurrentCamera.CFrame
-                local move = Vector3.new(0,0,0)
+                local moveDirection = Vector3.new(0, 0, 0)
                 
-                if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + cam.LookVector end
-                if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - cam.LookVector end
-                if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - cam.RightVector end
-                if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + cam.RightVector end
+                -- Controlli Movimento
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + cam.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - cam.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - cam.RightVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + cam.RightVector end
                 
-                bv.velocity = move * speed
-                bg.cframe = cam
+                -- Applica Velocità e Rotazione
+                bv.Velocity = moveDirection * (tonumber(SpeedInput.Text) or 50)
+                bg.CFrame = cam
+                
+                -- Noclip per non incastrarsi
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+                
+                RunService.Heartbeat:Wait()
             end
+            
+            -- Reset quando spegni
             bv:Destroy()
             bg:Destroy()
             char.Humanoid.PlatformStand = false
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
         end)
     end
 end)
+

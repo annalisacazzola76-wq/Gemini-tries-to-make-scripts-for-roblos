@@ -2,20 +2,14 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 
 local LPlayer = Players.LocalPlayer
-local Char = LPlayer.Character or LPlayer.CharacterAdded:Wait()
+local GUI_NAME = "FE_FLY_GUI"
 
--- Flight Variables
-local flying = false
-local flySpeed = 50
-local bv, bg
-
--- --- RAINBOW EFFECT FUNCTION ---
+-- --- FUNZIONE PER L'EFFETTO ARCOBALENO ---
 local function MakeRainbow(object)
     task.spawn(function()
-        while true do
+        while object and object.Parent do
             local hue = tick() % 5 / 5
             local color = Color3.fromHSV(hue, 1, 1)
             if object:IsA("UIStroke") then
@@ -28,42 +22,61 @@ local function MakeRainbow(object)
     end)
 end
 
--- --- EXECUTION NOTIFICATION (BOTTOM RIGHT) ---
-local NotifyGui = Instance.new("ScreenGui", game.CoreGui)
-local NotifyFrame = Instance.new("Frame", NotifyGui)
-local NotifyText = Instance.new("TextLabel", NotifyFrame)
-local NotifyStroke = Instance.new("UIStroke", NotifyFrame)
-local NotifyCorner = Instance.new("UICorner", NotifyFrame)
+-- --- FUNZIONE PER CREARE NOTIFICHE ---
+local function ShowNotification(message)
+    local NotifyGui = Instance.new("ScreenGui", game.CoreGui)
+    local NotifyFrame = Instance.new("Frame", NotifyGui)
+    local NotifyText = Instance.new("TextLabel", NotifyFrame)
+    local NotifyStroke = Instance.new("UIStroke", NotifyFrame)
+    local NotifyCorner = Instance.new("UICorner", NotifyFrame)
 
--- Posizionamento iniziale (Fuori dallo schermo a destra, in basso)
-NotifyFrame.Size = UDim2.new(0, 280, 0, 65)
-NotifyFrame.Position = UDim2.new(1, 20, 0.85, 0) 
-NotifyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-NotifyFrame.BorderSizePixel = 0
+    NotifyFrame.Size = UDim2.new(0, 250, 0, 60)
+    NotifyFrame.Position = UDim2.new(1, 20, 0.85, 0) -- Parte da fuori (destra)
+    NotifyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    NotifyFrame.BorderSizePixel = 0
 
-NotifyText.Size = UDim2.new(1, -20, 1, 0)
-NotifyText.Position = UDim2.new(0, 10, 0, 0)
-NotifyText.BackgroundTransparency = 1
-NotifyText.Text = "Thanks for executing, " .. LPlayer.Name .. "!"
-NotifyText.TextColor3 = Color3.fromRGB(255, 255, 255)
-NotifyText.Font = Enum.Font.GothamBold
-NotifyText.TextSize = 14
-NotifyText.TextWrapped = true
+    NotifyText.Size = UDim2.new(1, -20, 1, 0)
+    NotifyText.Position = UDim2.new(0, 10, 0, 0)
+    NotifyText.BackgroundTransparency = 1
+    NotifyText.Text = message
+    NotifyText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NotifyText.Font = Enum.Font.GothamBold
+    NotifyText.TextSize = 14
+    NotifyText.TextWrapped = true
 
-NotifyStroke.Thickness = 2
-NotifyCorner.CornerRadius = UDim.new(0, 12)
-MakeRainbow(NotifyStroke)
+    NotifyStroke.Thickness = 2
+    NotifyCorner.CornerRadius = UDim.new(0, 10)
+    MakeRainbow(NotifyStroke)
 
--- Animazione di entrata e uscita (In basso a destra)
-NotifyFrame:TweenPosition(UDim2.new(1, -300, 0.85, 0), "Out", "Back", 0.6)
-task.delay(4, function()
-    NotifyFrame:TweenPosition(UDim2.new(1, 20, 0.85, 0), "In", "Linear", 0.5)
-    task.wait(0.6)
-    NotifyGui:Destroy()
-end)
+    -- Animazione Entrata/Uscita
+    NotifyFrame:TweenPosition(UDim2.new(1, -270, 0.85, 0), "Out", "Back", 0.5)
+    task.delay(3, function()
+        if NotifyFrame then
+            NotifyFrame:TweenPosition(UDim2.new(1, 20, 0.85, 0), "In", "Linear", 0.5)
+            task.wait(0.5)
+            NotifyGui:Destroy()
+        end
+    end)
+end
 
--- --- MAIN GUI CREATION ---
+-- --- CONTROLLO DOPPIA ESECUZIONE ---
+if game.CoreGui:FindFirstChild(GUI_NAME) then
+    ShowNotification("Already executed!")
+    return -- Ferma lo script qui
+end
+
+-- --- SE NON ESISTE, PROCEDI CON L'ESECUZIONE ---
+ShowNotification("Thanks for executing, " .. LPlayer.Name .. "!")
+
+-- Flight Variables
+local flying = false
+local flySpeed = 50
+local bv, bg
+
+-- --- CREAZIONE GUI PRINCIPALE ---
 local MainGui = Instance.new("ScreenGui", game.CoreGui)
+MainGui.Name = GUI_NAME
+
 local MainFrame = Instance.new("Frame", MainGui)
 local MainStroke = Instance.new("UIStroke", MainFrame)
 local MainCorner = Instance.new("UICorner", MainFrame)
@@ -114,13 +127,12 @@ SpeedBox.Position = UDim2.new(0.1, 0, 0.72, 0)
 SpeedBox.Size = UDim2.new(0.8, 0, 0, 35)
 SpeedBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 SpeedBox.Text = "50"
-SpeedBox.PlaceholderText = "Speed..."
 SpeedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 SpeedBox.Font = Enum.Font.Gotham
 SpeedBox.TextSize = 16
 Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 8)
 
--- --- DRAGGABLE LOGIC ---
+-- --- TRASCINAMENTO (DRAGGABLE) ---
 local dragging, dragInput, dragStart, startPos
 MainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -142,7 +154,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- --- FLY LOGIC ---
+-- --- LOGICA VOLO ---
 FlyBtn.MouseButton1Click:Connect(function()
     flying = not flying
     flySpeed = tonumber(SpeedBox.Text) or 50
@@ -176,8 +188,4 @@ FlyBtn.MouseButton1Click:Connect(function()
         FlyBtn.Text = "Fly: OFF"
         FlyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     end
-end)
-
-SpeedBox.FocusLost:Connect(function()
-    flySpeed = tonumber(SpeedBox.Text) or 50
 end)
